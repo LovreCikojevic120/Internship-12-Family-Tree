@@ -2,43 +2,40 @@ const familyTree = [
     (root = {
         name: "sdvjnsdvk",
         surname: "skdjfbskd",
-        gender: "male",
-        parents: [],
+        gender: "Male",
         children: [],
-        companion: null,
-        birthYear: 1800,
-        deathYear: 1844,
+        birthYear: 1900,
+        deathYear: 1944,
+        outsider: false,
     }),
     (rootCompanion = {
         name: "tzhnjthk",
         surname: "skdjfbskd",
         oldSurname: "gbjndlvdd",
-        gender: "female",
-        parents: [],
+        gender: "Female",
         children: [],
         companion: root,
-        birthYear: 1802,
-        deathYear: 1856,
+        birthYear: 1902,
+        deathYear: 1956,
+        outsider: true,
     }),
     (rootChild1 = {
         name: "posjdvo",
         surname: "skdjfbskd",
-        gender: "female",
+        gender: "Female",
         parents: [root, rootCompanion],
         children: [],
-        companion: null,
-        birthYear: 1822,
-        deathYear: null,
+        birthYear: 1922,
+        outsider: false,
     }),
     (rootChild2 = {
-        name: "veivbw",
+        name: "sodgnsw",
         surname: "skdjfbskd",
-        gender: "male",
+        gender: "Male",
         parents: [root, rootCompanion],
         children: [],
-        companion: null,
-        birthYear: 1824,
-        deathYear: null,
+        birthYear: 1924,
+        outsider: false,
     }),
 ];
 
@@ -48,12 +45,28 @@ familyTree[1].children.push(rootChild1, rootChild2);
 
 console.log(familyTree);
 
-const mainMenuChoices = {
+const mainMenuChoice = {
     AddNewMember: 1,
     AddFamilyDeath: 2,
     ShowStatistics: 3,
     Exit: 0,
 };
+
+const memberMenuChoice = {
+    AddChild: 1,
+    AddCompanion: 2,
+    Exit: 0,
+};
+
+const statMenuChoice = {
+    Ancestors: 1,
+    Siblings: 2,
+    AvgAge: 3,
+    TableOfNames: 4,
+    TreePrint: 5,
+    PersonDetails: 6,
+    Exit: 0
+}
 
 let menuChoice;
 
@@ -69,19 +82,19 @@ while (menuChoice !== 0) {
     );
 
     switch (menuChoice) {
-        case mainMenuChoices.AddNewMember:
+        case mainMenuChoice.AddNewMember:
             AddMember();
             break;
-        case mainMenuChoices.AddFamilyDeath:
+        case mainMenuChoice.AddFamilyDeath:
             InputDeath();
             break;
-        case mainMenuChoices.ShowStatistics:
+        case mainMenuChoice.ShowStatistics:
             Statistics();
             break;
-        case mainMenuChoices.Exit:
+        case mainMenuChoice.Exit:
             break;
         default:
-            HandleError("Incorrect menu choice!");
+            alert("Incorrect menu choice!");
             break;
     }
 }
@@ -91,20 +104,20 @@ function AddMember() {
 
     while (inputMemberMenuChoice !== 0) {
         inputMemberMenuChoice = parseInt(
-            prompt("1 - Child\n2 - Marriage companion\n0 - Back to main menu")
+            prompt("1 - Child\n2 - Marriage companion\n0 - Exit to main menu")
         );
 
         switch (inputMemberMenuChoice) {
-            case 1:
+            case memberMenuChoice.AddChild:
                 InputChild();
                 break;
-            case 2:
+            case memberMenuChoice.AddCompanion:
                 InputCompanion();
                 break;
-            case 0:
+            case mainMenuChoice.Exit:
                 return;
             default:
-                HandleError("Incorrect menu choice!");
+                alert("Incorrect menu choice!");
                 break;
         }
     }
@@ -113,28 +126,32 @@ function AddMember() {
 function InputCompanion() {
     const person = {};
 
+    person.children = [];
+    person.outsider = true;
+
     person.name = StringInput("name");
     if (person.name === "") return;
 
     person.surname = StringInput("surname");
     if (person.surname === "") return;
 
-    person.birthYear = YearInput("birth year");
-    if (person.birthYear === "") return;
-
-    person.gender = StringInput("gender");
+    person.gender = GenderInput();
     if (person.gender === "") return;
 
-    if (person.gender === "female")
-        person.oldSurname = StringInput("old surname");
-    if (person.oldSurname === "") return;
+    person.birthYear = BirthYearInput();
+    if (person.birthYear === "") return;
 
-    person.companion = ObjectInput("companion");
+    person.companion = CompanionInput(person.birthYear);
     if (person.companion === "") return;
     else familyTree[familyTree.indexOf(person.companion)].companion = person;
 
+    if (person.gender === "Female")
+        person.oldSurname = StringInput("old surname");
+    if (person.oldSurname === "") return;
+
     familyTree.push(person);
     alert("Companion added!");
+    return;
 }
 
 function InputChild() {
@@ -143,65 +160,246 @@ function InputChild() {
     person.name = StringInput("name");
     if (person.name === "") return;
 
-    person.birthYear = YearInput("birth year");
-    if (person.birthYear === "") return;
-
-    person.gender = StringInput("gender");
+    person.gender = GenderInput();
     if (person.gender === "") return;
 
-    person.parents = ObjectInput("child");
+    person.birthYear = BirthYearInput();
+    if (person.birthYear === "") return;
+
+    person.parents = ChildParentInput(person.birthYear);
     if (person.parents === "") return;
     else {
-        for(let parent of person.parents)
+        for (let parent of person.parents) {
             familyTree[familyTree.indexOf(parent)].children.push(person);
+            person.surname = parent.surname;
+        }
     }
+
+    person.outsider = false;
+    person.children = [];
 
     familyTree.push(person);
     alert("Child added!");
+    return;
 }
 
 function InputDeath() {
-    alert("ded");
+    let chosenIndex, person;
+
+    while (chosenIndex !== "") {
+        chosenIndex = prompt(`Insert number for person\n${PrintTree(0, "")}`);
+        person = familyTree[chosenIndex];
+
+        if (person && !(deathYear in person)) {
+            let yearOfDeath = YearInput("year of death");
+            if (yearOfDeath === "") return;
+
+            if (yearOfDeath >= person.birthYear || Math.abs(yearOfDeath - person.birthYear) < 120) {
+                familyTree[chosenIndex].deathYear = yearOfDeath;
+                alert("Death recorded, rest in RIP!");
+                return;
+            }
+
+            alert("Invalid year!");
+        } else alert("Person doesn't exsist or is already dead!");
+    }
+}
+
+function CompanionInput(birthyear) {
+    let indexChoice, person;
+
+    while (indexChoice !== "") {
+        indexChoice = prompt(
+            `Insert number for companion\n${PrintTree(0, "")}`
+        );
+        person = familyTree[indexChoice];
+
+        if (person) {
+            if (person.companion)
+                alert("Chosen person already has a companion");
+            else if ("deathYear" in person)
+                alert("Chosen person is dead!");
+            else if(Math.abs(person.birthYear - birthyear) > 100)
+                alert("Age difference too large");
+            else return person;
+        }
+
+        else alert("Chosen person doesn't exsist");
+    }
+    return indexChoice === "" ? indexChoice : person;
+}
+
+function ChildParentInput(childBirthYear) {
+    let indexChoice, person;
+
+    while (indexChoice !== "") {
+        indexChoice = prompt(`Insert number for parent\n${PrintTree(0, "")}`);
+        person = familyTree[indexChoice];
+
+        if (person) {
+            if (!person.companion || (deathYear in person))
+                alert("Chosen person either died or doesn't have a companion");
+            else if(person.gender === person.companion.gender)
+                alert("Companions with equal gender can\'t have children!");
+            else
+                return [person, person.companion];
+        }
+
+        else alert("Chosen person doesn't exsist");
+    }
+    
+    return indexChoice;
 }
 
 function Statistics() {
-    alert("stst");
+    let menuChoice;
+
+    while (menuChoice !== 0) {
+        menuChoice = parseInt(
+            prompt(
+                "Choose statistics option:\n" +
+                    "1 - Show ancestors\n" +
+                    "2 - Show brothers and sisters\n" +
+                    "3 - Average age by gender\n" +
+                    "4 - Show table of names\n" +
+                    "5 - Show family tree\n" +
+                    "6 - Show person details\n" +
+                    "0 - Exit statistics"
+            )
+        );
+
+        switch (menuChoice) {
+            case statMenuChoice.Ancestors:
+                ShowGeneration(0);
+                break;
+            case statMenuChoice.Siblings:
+                ShowSiblings();
+                break;
+            case statMenuChoice.AvgAge:
+                AverageAgeByGender();
+                break;
+            case statMenuChoice.TableOfNames:
+                NameTable();
+                break;
+            case statMenuChoice.TreePrint:
+                alert(PrintTree(0, ""));
+                break;
+            case statMenuChoice.PersonDetails:
+                PrintPersonDetails();
+                break;
+            case statMenuChoice.Exit:
+                return;
+            default:
+                alert("Incorrect menu choice!");
+                break;
+        }
+    }
 }
 
-function HandleError(errorMessage) {
-    alert(errorMessage);
+function GenerationNumber(person, genNumber){
+    let ancestor;
+
+    if(person.parents){
+        for(parent in person.parents)
+            if(!parent.outsider)
+                ancestor = parent;
+
+        genNumber += GenerationNumber(parent, ++genNumber);
+    }
+        
+    return genNumber;
 }
 
-function ObjectInput(inputType) {
-    let indexChoice;
-    let treePrint = PrintTree(0);
+function ShowGeneration(){
+    let treeIndex, result = "", person;
 
-    if (inputType === "companion") {
-        while (indexChoice !== "") {
-            let indexChoice = prompt(
-                `Insert number for companion\n${treePrint}`);
+    while (treeIndex !== "") {
+        treeIndex = prompt(PrintTree(0, ""));
+        person = familyTree[treeIndex];
 
-            if (familyTree[indexChoice].companion)
-                HandleError("Chosen person already has a companion!");
-            if (familyTree[indexChoice].companion.deathYear)
-                HandleError("Chosen person DED!");
+        if (person) {
+            alert(GenerationNumber(person, 0));
+            return;
         }
-        return indexChoice === "" ? indexChoice : familyTree[indexChoice];
+
+        alert("Person doesn\'t exsist");
+    }
+}
+
+function PrintPersonDetails() {
+    let treeIndex, result = "Details:", person;
+
+    while (treeIndex !== "") {
+        treeIndex = prompt(PrintTree(0, ""));
+        person = familyTree[treeIndex];
+
+        if (person) {
+            for (let prop in person)
+                if (
+                    prop !== "children" &&
+                    prop !== "parents" &&
+                    prop !== "companion" &&
+                    prop !== "outsider"
+                )
+                    result += `${prop}: ${person[prop]}\n`;
+        }
+
+        alert(result);
+    }
+}
+
+function NameTable() {
+    const table = [];
+    let result = "";
+
+    for (let person of familyTree) {
+        let tableIndex = table.find(
+            (tableRow) => tableRow.name === person.name
+        );
+
+        if (tableIndex) {
+            tableIndex.counter++;
+        } else {
+            let entry = { name: person.name, counter: 1 };
+            table.push(entry);
+        }
     }
 
-    if(inputType === "child"){
-        while (indexChoice !== "") {
-            let indexChoice = prompt(
-                `Insert number for parent\n${treePrint}`);
+    for (let row of table) result += `${row.name}: ${row.counter}\n`;
 
-            if (!familyTree[indexChoice].companion)
-                HandleError("Chosen person doesn\'t have a partner!");
-            if (familyTree[indexChoice].companion.deathYear)
-                HandleError("Chosen person DED!");
+    alert(result);
+}
+
+function AverageAgeByGender() {
+    let gender = GenderInput(), sum = 0.0, counter = 0.0, currentYear = new Date().getFullYear();
+    if(gender === "")return;
+
+    for (let person of familyTree) {
+        if (!person.outsider && person.gender === gender) {
+
+            if (person.deathYear) sum += person.deathYear - person.birthYear;
+            else sum += currentYear - person.birthYear;
+
+            counter++;
         }
-        if(indexChoice === "")return indexChoice;
-        return [familyTree[indexChoice], familyTree[indexChoice].companion];
     }
+
+    alert(`Average age of all ${gender} family members is: ${parseFloat(sum / counter).toFixed(2)}`);
+    return;
+}
+
+function ShowSiblings() {
+    let treeIndex = prompt(PrintTree(0, ""));
+    let parent = familyTree[treeIndex].parents[0];
+    let result = "Siblings:";
+
+    for (let child of parent.children) {
+        if(familyTree[treeIndex] !== child)
+            result += `${child.name} ${child.surname}\n`;
+    }
+
+    alert(result);
+    return;
 }
 
 function StringInput(inputType) {
@@ -213,42 +411,72 @@ function StringInput(inputType) {
         );
 
         if (result !== " " && isNaN(result)) return result;
+
+        alert("Incorrect input");
     }
 
     if (result === "") {
-        HandleError("You canceled your input!");
+        alert("You canceled your input!");
         return result;
     }
 }
 
-function YearInput(inputType) {
+function BirthYearInput() {
     let result;
 
     while (result !== "") {
         result = prompt(
-            `Insert ${inputType}, to cancel input leave field empty`
+            `Insert birth year, to cancel input leave field empty`
         );
 
         if (result !== " " && !isNaN(result)) return result;
+
+        alert("Incorrect input");
+    }
+
+    if (result === "") {
+        alert("You canceled your input!");
+        return result;
     }
 }
 
-function PrintTree(treeIndex) {
+function GenderInput(){
+    let result;
+
+    while (result !== "") {
+        result = prompt(
+            `Insert gender as\nM for male\nF for female\nTo cancel input leave field empty.`
+        );
+
+        if(result === "M" || result === "F")return result === "M" ? "Male" : "Female";
+
+        alert("Incorrect input");
+    }
+
+    if (result === "") {
+        alert("You canceled your input!");
+        return result;
+    }
+}
+
+function PrintTree(treeIndex, indent) {
     let result = "";
+    indent += "    ";
+
     if (!familyTree[treeIndex]) return result;
 
     let person = familyTree[treeIndex];
     result += `${treeIndex} ${person.name}`;
 
     if (person.companion)
-        result += `---${familyTree.indexOf(person.companion)} ${
+        result += ` + ${familyTree.indexOf(person.companion)} ${
             person.companion.name
         }\n`;
     else result += "\n";
 
     if (familyTree[treeIndex].hasOwnProperty("children")) {
         for (let child of familyTree[treeIndex].children) {
-            result += PrintTree(familyTree.indexOf(child));
+            result += indent + PrintTree(familyTree.indexOf(child), indent);
         }
     }
 
