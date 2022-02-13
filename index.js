@@ -77,9 +77,7 @@ while (menuChoice !== 0) {
                 '1 - Add a family member\n' +
                 '2 - Input family death\n' +
                 '3 - Statistics\n' +
-                '0 - Exit application'
-        )
-    );
+                '0 - Exit application'));
 
     switch (menuChoice) {
         case mainMenuChoice.AddNewMember:
@@ -103,9 +101,8 @@ function AddMember() {
     let inputMemberMenuChoice;
 
     while (inputMemberMenuChoice !== 0) {
-        inputMemberMenuChoice = parseInt(
-            prompt('1 - Child\n2 - Marriage companion\n0 - Exit to main menu')
-        );
+        inputMemberMenuChoice = parseInt(prompt('1 - Child\n' +
+            '2 - Marriage companion\n0 - Exit to main menu'));
 
         switch (inputMemberMenuChoice) {
             case memberMenuChoice.AddChild:
@@ -143,9 +140,10 @@ function InputCompanion() {
     else familyTree[familyTree.indexOf(person.companion)].companion = person;
 
     if (person.gender === 'Female'){
-        
+
         person.oldSurname = StringInput('old surname');
         if (person.oldSurname === '') return;
+
         person.surname = person.companion.surname;
     }
     else {
@@ -174,6 +172,7 @@ function InputChild() {
 
     person.parents = ChildParentInput(person.birthYear);
     if (person.parents === '') return;
+
     else {
         for (let parent of person.parents) {
             familyTree[familyTree.indexOf(parent)].children.push(person);
@@ -215,18 +214,19 @@ function CompanionInput(birthyear) {
     let indexChoice, person;
 
     while (indexChoice !== '') {
-        indexChoice = prompt(
-            `Insert number for companion\n${PrintTree(0, '')}`
-        );
+        indexChoice = prompt(`Insert number for companion\n${PrintTree(0, '')}`);
         person = familyTree[indexChoice];
 
         if (person) {
             if (person.companion)
                 alert('Chosen person already has a companion');
+
             else if ('deathYear' in person)
                 alert('Chosen person is dead!');
+
             else if(Math.abs(person.birthYear - birthyear) > 100)
                 alert('Age difference too large');
+
             else return person;
         }
 
@@ -243,14 +243,18 @@ function ChildParentInput(childBirthYear) {
         person = familyTree[indexChoice];
 
         if (person && person.surname === root.surname) {
+
             if (!person.companion || ('deathYear' in person))
                 alert('Chosen person either died or doesn\'t have a companion');
+
             else if(person.gender === person.companion.gender)
                 alert('Companions with equal gender can\'t have children!');
-            else if(childBirthYear - person.birthYear < 18 || childBirthYear - person.companion.birthYear < 18)
-                alert('One of the parents are underaged')
-            else
-                return [person, person.companion];
+
+            else if(childBirthYear - person.birthYear < 18 || 
+                childBirthYear - person.companion.birthYear < 18)
+                alert('One of the parents are underaged');
+
+            else return [person, person.companion];
         }
 
         if(!person) alert('Chosen person doesn\'t exsist');
@@ -264,18 +268,14 @@ function Statistics() {
     let menuChoice;
 
     while (menuChoice !== 0) {
-        menuChoice = parseInt(
-            prompt(
-                'Choose statistics option:\n' +
+        menuChoice = parseInt(prompt('Choose statistics option:\n' +
                     '1 - Show ancestors\n' +
                     '2 - Show brothers and sisters\n' +
                     '3 - Average age by gender\n' +
                     '4 - Show table of names\n' +
                     '5 - Show family tree\n' +
                     '6 - Show person details\n' +
-                    '0 - Exit statistics'
-            )
-        );
+                    '0 - Exit statistics'));
 
         switch (menuChoice) {
             case statMenuChoice.Ancestors:
@@ -326,7 +326,7 @@ function ShowGeneration(){
         person = familyTree[treeIndex];
 
         if (person) {
-            alert(GenerationNumber(person, 0));
+            alert(`Chosen person is ${GenerationNumber(person, 0)}. generation!`);
             return;
         }
 
@@ -374,16 +374,16 @@ function NameTable() {
     let result = '';
 
     for (let person of familyTree) {
-        let tableIndex = table.find(
-            (tableRow) => tableRow.name === person.name
-        );
+
+        let tableIndex = table.find(tableRow => tableRow.name === person.name);
 
         if (tableIndex) {
             tableIndex.counter++;
-        } else {
-            let entry = { name: person.name, counter: 1 };
-            table.push(entry);
+            continue;
         }
+            
+        let entry = { name: person.name, counter: 1 };
+        table.push(entry);
     }
 
     for (let row of table) result += `${row.name}: ${row.counter}\n`;
@@ -411,8 +411,14 @@ function AverageAgeByGender() {
 
 function ShowSiblings() {
     let treeIndex = prompt(PrintTree(0, ''));
+
+    if(!("parents" in familyTree[treeIndex])){
+        alert('Chosen person doesn\'t have parents');
+        return;
+    }
+
     let parent = familyTree[treeIndex].parents[0];
-    let result = 'Siblings:';
+    let result = 'Siblings:\n';
 
     for (let child of parent.children) {
         if(familyTree[treeIndex] !== child)
@@ -499,8 +505,8 @@ function PrintTree(treeIndex, indent) {
     }
     result += '\n';
 
-    if (familyTree[treeIndex].hasOwnProperty('children')) {
-        for (let child of familyTree[treeIndex].children) {
+    if (person.hasOwnProperty('children')) {
+        for (let child of person.children) {
             result += indent + PrintTree(familyTree.indexOf(child), indent);
         }
     }
