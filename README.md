@@ -1,1 +1,3 @@
-# Internship-12-Family-Tree
+# DUMP Internship Assignment #12
+
+Project covering the basics of JavaScript
